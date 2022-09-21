@@ -52,18 +52,8 @@ func (s *Service) GetChannels() ([]models.Channel, error) {
 
 	for _, c := range res.Items {
 		channelThumbnails := parseThumbnails(c.Snippet.Thumbnails)
-		path := ""
-		switch s.AppConfig.ThumbSize {
-		case consts.SP_HIGH:
-			path = s.getThumbnailsPath(c.Id, channelThumbnails[consts.SP_HIGH].URL)
-			thumbnails[path] = channelThumbnails[consts.SP_HIGH].URL
-		case consts.SP_MEDIUM:
-			path = s.getThumbnailsPath(c.Id, channelThumbnails[consts.SP_MEDIUM].URL)
-			thumbnails[path] = channelThumbnails[consts.SP_MEDIUM].URL
-		default:
-			path = s.getThumbnailsPath(c.Id, channelThumbnails[consts.SP_DEFAULT].URL)
-			thumbnails[path] = channelThumbnails[consts.SP_DEFAULT].URL
-		}
+		path, url := s.chooseThumbnail(c.Id, channelThumbnails)
+		thumbnails[path] = url
 		channels = append(channels, models.Channel{
 			Id:            c.Id,
 			Title:         c.Snippet.Title,
@@ -123,18 +113,8 @@ func (s *Service) parsePlaylists(res *youtube.PlaylistListResponse) []models.Pla
 	playlists := []models.Playlist{}
 	for _, p := range res.Items {
 		playlistThumbnails := parseThumbnails(p.Snippet.Thumbnails)
-		path := ""
-		switch s.AppConfig.ThumbSize {
-		case consts.SP_HIGH:
-			path = s.getThumbnailsPath(p.Id, playlistThumbnails[consts.SP_HIGH].URL)
-			thumbnails[path] = playlistThumbnails[consts.SP_HIGH].URL
-		case consts.SP_MEDIUM:
-			path = s.getThumbnailsPath(p.Id, playlistThumbnails[consts.SP_MEDIUM].URL)
-			thumbnails[path] = playlistThumbnails[consts.SP_MEDIUM].URL
-		default:
-			path = s.getThumbnailsPath(p.Id, playlistThumbnails[consts.SP_DEFAULT].URL)
-			thumbnails[path] = playlistThumbnails[consts.SP_DEFAULT].URL
-		}
+		path, url := s.chooseThumbnail(p.Id, playlistThumbnails)
+		thumbnails[path] = url
 		vidRes, err := s.getPlaylistVideos(p.Id)
 		if err != nil {
 			log.Printf("can't get videos for playlist %s", p.Id)
@@ -159,20 +139,8 @@ func (s *Service) parseVideos(res *youtube.PlaylistItemListResponse) []models.Vi
 	thumbnails := make(map[string]string, 0)
 	for _, v := range res.Items {
 		videoThumbnails := parseThumbnails(v.Snippet.Thumbnails)
-		path := ""
-		switch s.AppConfig.ThumbSize {
-		case consts.SP_HIGH:
-			path = s.getThumbnailsPath(v.Id, videoThumbnails[consts.SP_HIGH].URL)
-			thumbnails[path] = videoThumbnails[consts.SP_HIGH].URL
-		case consts.SP_MEDIUM:
-			path = s.getThumbnailsPath(v.Id, videoThumbnails[consts.SP_MEDIUM].URL)
-			thumbnails[path] = videoThumbnails[consts.SP_MEDIUM].URL
-		default:
-			path = s.getThumbnailsPath(v.Id, videoThumbnails[consts.SP_DEFAULT].URL)
-			if len(videoThumbnails[consts.SP_DEFAULT].URL) > 0 {
-				thumbnails[path] = videoThumbnails[consts.SP_DEFAULT].URL
-			}
-		}
+		path, url := s.chooseThumbnail(v.Id, videoThumbnails)
+		thumbnails[path] = url
 		videos = append(videos, models.Video{
 			Id:            v.Snippet.ResourceId.VideoId,
 			Title:         html.EscapeString(v.Snippet.Title),
@@ -251,6 +219,20 @@ func parseThumbnails(t *youtube.ThumbnailDetails) map[string]models.Thumbnail {
 	}
 
 	return thumbnails
+}
+
+func (s *Service) chooseThumbnail(id string, t map[string]models.Thumbnail) (string, string) {
+	switch s.AppConfig.ThumbSize {
+	case consts.SP_HIGH:
+		return s.getThumbnailsPath(id, t[consts.SP_HIGH].URL),
+			t[consts.SP_HIGH].URL
+	case consts.SP_MEDIUM:
+		return s.getThumbnailsPath(id, t[consts.SP_MEDIUM].URL),
+			t[consts.SP_MEDIUM].URL
+	default:
+		return s.getThumbnailsPath(id, t[consts.SP_DEFAULT].URL),
+			t[consts.SP_DEFAULT].URL
+	}
 }
 
 // Join path for thumbnails from cache path, id and extension, taken from url

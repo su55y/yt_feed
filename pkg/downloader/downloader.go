@@ -41,8 +41,10 @@ func download_file(url, path string, wg *sync.WaitGroup) {
 func DownloadAll(urls map[string]string) {
 	var wg sync.WaitGroup
 	for k, u := range urls {
-		wg.Add(1)
-		go download_file(u, k, &wg)
+		if len(u) > 0 {
+			wg.Add(1)
+			go download_file(u, k, &wg)
+		}
 	}
 	wg.Wait()
 }
