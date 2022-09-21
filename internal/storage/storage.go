@@ -61,14 +61,14 @@ func (s *Storage) ReadChannels() ([]models.Channel, error) {
 
 func (s *Storage) ReadAllPlaylists(
 	channelId string,
-	force bool,
+	update bool,
 ) (map[string]models.Playlist, error) {
 	path := filepath.Join(
 		s.AppConfig.CachePath,
 		fmt.Sprintf("%s%s%s", consts.P_PLAYLISTS, channelId, consts.EXT_JSON),
 	)
 
-	if !exists(path) || force {
+	if !exists(path) || update {
 		playlists, err := s.Service.GetPlaylists(channelId)
 		if err != nil {
 			return nil, err
@@ -97,8 +97,6 @@ func (s *Storage) ReadAllPlaylists(
 		return nil, err
 	}
 
-	// return playlists, nil
-
 	playlistsMap := make(map[string]models.Playlist, 0)
 	for _, p := range playlists {
 		playlistsMap[p.Id] = p
@@ -107,13 +105,13 @@ func (s *Storage) ReadAllPlaylists(
 	return playlistsMap, nil
 }
 
-func (s *Storage) ReadUploads(channelId string, force bool) ([]models.Video, error) {
+func (s *Storage) ReadUploads(channelId string, update bool) ([]models.Video, error) {
 	path := filepath.Join(
 		s.AppConfig.CachePath,
 		fmt.Sprintf("%s%s%s", consts.P_VIDEOS, channelId, consts.EXT_JSON),
 	)
 
-	if !exists(path) || force {
+	if !exists(path) || update {
 		videos, err := s.Service.GetUploads(channelId)
 		if err != nil {
 			return nil, err
