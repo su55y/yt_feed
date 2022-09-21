@@ -153,10 +153,8 @@ func main() {
 	defer f.Close()
 	log.SetOutput(f)
 
-	// channels := make([]models.Channel, 0)
 	blocksOutput := models.Blocks{}
 
-	// updChan := make(chan bool)
 	ytService := service.New(context.Background(), &appConf)
 	stor := storage.New(&appConf, &ytService)
 
@@ -286,7 +284,7 @@ func main() {
 			}
 		}
 
-		blocksOutput.Prompt = ""
+		blocksOutput.Input = ""
 		j, err := json.Marshal(&blocksOutput)
 		if err != nil {
 			log.Fatal(err)

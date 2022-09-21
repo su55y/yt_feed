@@ -3,8 +3,8 @@ package models
 type Blocks struct {
 	Message string `json:"message"`
 	// Overlay string `json:"overlay"`
-	Prompt string `json:"prompt"`
-	// Input  string `json:"input"`
+	// Prompt string `json:"prompt"`
+	Input string `json:"input"`
 	Lines []Line `json:"lines"`
 	// ActEntr int    `json:"active entry,omitempty"`
 }
