@@ -141,6 +141,18 @@ func openInMPV(id string) bool {
 	return c.Process.Pid > 0
 }
 
+type PlaylistBuffer struct {
+	channelId string
+	playlists map[string]models.Playlist
+}
+
+func newPlBuffer(id string, p map[string]models.Playlist) PlaylistBuffer {
+	return PlaylistBuffer{
+		channelId: id,
+		playlists: p,
+	}
+}
+
 func main() {
 	f, err := os.OpenFile(
 		filepath.Join(conf.AppCachePath, "log"),
@@ -171,14 +183,8 @@ func main() {
 	}
 	fmt.Println(string(j))
 
-	// updRes := <-updChan
-	// if updRes {
-	// 	blocksOutput.Message = "updating...done"
-	// } else {
-	// 	blocksOutput.Message = "updating...failed"
-	// }
-
 	var runMPV bool
+	var plBuffer PlaylistBuffer
 
 	inDecoder := json.NewDecoder(os.Stdin)
 	blocksInput := models.BlocksIn{}
@@ -207,12 +213,11 @@ func main() {
 						err.Error(),
 					)
 				} else {
-					blocksOutput.Lines = []models.Line{{Text: "back"}}
-					blocksOutput.Lines = append(blocksOutput.Lines, blocks.PrintVideos(videos)...)
-					blocksOutput.Message = fmt.Sprintf(
-						"last %d videos of %s",
-						len(videos),
-						blocksInput.Data,
+					blocksOutput = blocks.PrintVideos(
+						models.Playlist{
+							Title:  "Uploads",
+							Videos: videos,
+						},
 					)
 				}
 			case "playlists":
@@ -223,16 +228,8 @@ func main() {
 						err.Error(),
 					)
 				} else {
-					blocksOutput.Lines = []models.Line{{Text: "back"}}
-					blocksOutput.Lines = append(
-						blocksOutput.Lines,
-						blocks.PrintPlaylists(playlists)...,
-					)
-					blocksOutput.Message = fmt.Sprintf(
-						"last %d playlists of %s",
-						len(playlists),
-						blocksInput.Data,
-					)
+					blocksOutput = blocks.PrintPlaylists(playlists)
+					plBuffer = newPlBuffer(blocksInput.Data, playlists)
 				}
 			case "update playlists":
 				blocksOutput.Message = "updating playlists for " + blocksInput.Data
@@ -260,18 +257,13 @@ func main() {
 				blocksOutput.Lines = blocks.PrintChannels(channels)
 			default:
 				if len(blocksInput.Data) == 34 { // playlist
-					if playlists, err := stor.ReadAllPlaylists(currentChannel, false); err != nil {
+					if plBuffer.channelId == currentChannel {
+						log.Println("read playlists from buffer")
+						blocksOutput = blocks.PrintVideos(plBuffer.playlists[blocksInput.Data])
+					} else if playlists, err := stor.ReadAllPlaylists(currentChannel, false); err != nil {
 						blocksOutput.Message = "get playlist videos error"
 					} else {
-						blocksOutput.Lines = []models.Line{
-							{Text: "back"},
-						}
-						blocksOutput.Lines = append(
-							blocksOutput.Lines,
-							blocks.PrintVideos(playlists[blocksInput.Data].Videos)...,
-						)
-						blocksOutput.Message = fmt.Sprintf("last %d videos of %s playlist",
-							len(blocksOutput.Lines)-1, blocksInput.Data)
+						blocksOutput = blocks.PrintVideos(playlists[blocksInput.Data])
 					}
 				} else if len(blocksInput.Data) == 11 {
 					if runMPV = openInMPV(blocksInput.Data); !runMPV {
