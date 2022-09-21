@@ -74,4 +74,7 @@ thumbnails_size: "default"
 	// extensions
 	EXT_JSON = ".json"
 	EXT_JPG  = ".jpg"
+
+	// dirs
+	THUMB_DIR_NAME = "thumbnails"
 )

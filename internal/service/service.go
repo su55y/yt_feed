@@ -268,7 +268,7 @@ func (s *Service) getThumbnailsPath(id, url string) string {
 
 	}
 	return filepath.Join(
-		s.AppConfig.CachePath,
+		s.AppConfig.ThumbDir,
 		sizePrefix+id+ext,
 	)
 }

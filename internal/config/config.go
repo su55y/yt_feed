@@ -19,6 +19,7 @@ type AppConfig struct {
 	ThumbOff   bool     `yaml:"thumbnails_disable"`
 	ThumbSize  string   `yaml:"thumbnails_size"`
 	Channels   []string `yaml:"channels"`
+	ThumbDir   string
 }
 
 var (

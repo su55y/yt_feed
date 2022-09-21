@@ -122,6 +122,13 @@ func init() {
 	} else {
 		appConf.CachePath = conf.AppCachePath
 	}
+
+	appConf.ThumbDir = filepath.Join(appConf.CachePath, consts.THUMB_DIR_NAME)
+	if !exists(appConf.ThumbDir) {
+		if err := os.MkdirAll(appConf.ThumbDir, os.ModePerm); err != nil {
+			log.Fatal(err)
+		}
+	}
 }
 
 func openInMPV(id string) bool {
