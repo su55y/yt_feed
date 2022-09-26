@@ -31,7 +31,7 @@ func New(conf *config.AppConfig, serv *service.Service) Storage {
 	}
 }
 
-func (s *Storage) ReadChannels() ([]models.Channel, error) {
+func (s *Storage) ReadChannels() (map[string]models.Channel, error) {
 	path := filepath.Join(s.AppConfig.CachePath, channelsFile)
 	if !exists(path) {
 		channels, err := s.Service.GetChannels()
@@ -45,7 +45,7 @@ func (s *Storage) ReadChannels() ([]models.Channel, error) {
 		return channels, nil
 	}
 
-	channels := make([]models.Channel, 0)
+	channels := make(map[string]models.Channel, 0)
 	channelsRaw, err := ioutil.ReadFile(path)
 	if err != nil {
 		log.Printf("read channels from file error: %s\n", err.Error())
@@ -171,7 +171,7 @@ func (s *Storage) ReadPlaylist(playlistId string) ([]models.Video, error) {
 	return videos, nil
 }
 
-func (s *Storage) writeChannelsToFile(channels []models.Channel) bool {
+func (s *Storage) writeChannelsToFile(channels map[string]models.Channel) bool {
 	path := filepath.Join(s.AppConfig.CachePath, channelsFile)
 	file, err := os.OpenFile(path, os.O_CREATE|os.O_RDWR, 0644)
 	defer file.Close()

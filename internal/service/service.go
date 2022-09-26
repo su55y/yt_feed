@@ -33,7 +33,7 @@ func New(ctx context.Context, conf *config.AppConfig) Service {
 }
 
 // Get channels list request and download thumbnails for them
-func (s *Service) GetChannels() ([]models.Channel, error) {
+func (s *Service) GetChannels() (map[string]models.Channel, error) {
 	call := s.YT.Channels.List([]string{"snippet"}).
 		Id(strings.Join(s.AppConfig.Channels, ",")).
 		MaxResults(50)
@@ -47,19 +47,19 @@ func (s *Service) GetChannels() ([]models.Channel, error) {
 		return nil, errors.New("get channels list request failed")
 	}
 
-	channels := make([]models.Channel, 0)
+	channels := make(map[string]models.Channel, 0)
 	thumbnails := make(map[string]string, 0)
 
 	for _, c := range res.Items {
 		channelThumbnails := parseThumbnails(c.Snippet.Thumbnails)
 		path, url := s.chooseThumbnail(c.Id, channelThumbnails)
 		thumbnails[path] = url
-		channels = append(channels, models.Channel{
+		channels[c.Id] = models.Channel{
 			Id:            c.Id,
 			Title:         c.Snippet.Title,
 			Thumbnails:    channelThumbnails,
 			ThumbnailPath: path,
-		})
+		}
 	}
 
 	if !s.AppConfig.ThumbOff {
