@@ -156,15 +156,6 @@ func newPlBuffer(
 	}
 }
 
-func getChannelTitleById(ch []models.Channel, id string) string {
-	for _, c := range ch {
-		if c.Id == id {
-			return c.Title
-		}
-	}
-	return "menu"
-}
-
 func main() {
 	f, err := os.OpenFile(
 		filepath.Join(conf.AppCachePath, "log"),
@@ -227,14 +218,11 @@ func main() {
 				} else {
 					blocksOutput = blocks.PrintVideos(
 						models.Playlist{
-							Title:  "Uploads",
+							Title:  fmt.Sprintf("%s uploads", channels[blocksInput.Data].Title),
 							Videos: videos,
 						},
 						blocksInput.Data,
 					)
-					if blocksInput.Data == plBuffer.channel.Id {
-						blocksOutput.Message = plBuffer.channel.Title
-					}
 				}
 			case "playlists":
 				if playlists, err := stor.ReadAllPlaylists(blocksInput.Data, false); err != nil {
@@ -282,13 +270,15 @@ func main() {
 					switch v[0] {
 					case "channel":
 						blocksOutput.Lines = blocks.PrintChannelMenu(v[1])
+						blocksOutput.Message = channels[v[1]].Title
 					}
 				} else {
 					blocksOutput.Message = "channels list"
 					blocksOutput.Lines = blocks.PrintChannels(channels)
 				}
 			default:
-				if len(blocksInput.Data) == 34 { // playlist
+				switch len(blocksInput.Data) {
+				case 34: // playlist
 					if plBuffer.channel.Id == currentChannel {
 						log.Println("read playlists from buffer")
 						blocksOutput = blocks.PrintVideos(
@@ -300,12 +290,12 @@ func main() {
 					} else {
 						blocksOutput = blocks.PrintVideos(playlists[blocksInput.Data], currentChannel)
 					}
-				} else if len(blocksInput.Data) == 11 {
+				case 11:
 					if runMPV = openInMPV(blocksInput.Data); !runMPV {
 						blocksOutput.Message += " : error"
 					}
-				} else {
-					blocksOutput.Message = plBuffer.channel.Title
+				default:
+					blocksOutput.Message = channels[blocksInput.Data].Title
 					blocksOutput.Lines = blocks.PrintChannelMenu(blocksInput.Data)
 				}
 			}
