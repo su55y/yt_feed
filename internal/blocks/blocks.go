@@ -21,13 +21,14 @@ func PrintChannelMenu(channelId string) []models.Line {
 	return lines
 }
 
-func PrintChannels(channels map[string]models.Channel) []models.Line {
+func PrintChannels(channels map[string]models.Channel, updating bool) []models.Line {
 	lines := make([]models.Line, 0)
 	for _, c := range channels {
 		lines = append(lines, models.Line{
-			Text: c.Title,
-			Data: c.Id,
-			Icon: c.ThumbnailPath,
+			Text:          c.Title,
+			Data:          c.Id,
+			Icon:          c.ThumbnailPath,
+			Nonselectable: updating,
 		})
 	}
 	return lines

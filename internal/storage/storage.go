@@ -8,6 +8,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"sync"
 
 	"github.com/su55y/yt_feed/internal/config"
 	"github.com/su55y/yt_feed/internal/consts"
@@ -29,6 +30,26 @@ func New(conf *config.AppConfig, serv *service.Service) Storage {
 		AppConfig: conf,
 		Service:   serv,
 	}
+}
+
+func (s *Storage) UpdateAll(channels map[string]models.Channel) bool {
+	var wg sync.WaitGroup
+	wg.Add(len(channels))
+	updateChannel := func(channelId string) {
+		defer wg.Done()
+		if _, err := s.ReadUploads(channelId, true); err != nil {
+			log.Printf("error while updating channel %s uploads: %s", channelId, err.Error())
+		}
+		if _, err := s.ReadAllPlaylists(channelId, true); err != nil {
+			log.Printf("error while updating channel %s playlists: %s", channelId, err.Error())
+		}
+	}
+
+	for _, c := range channels {
+		go updateChannel(c.Id)
+	}
+	wg.Wait()
+	return true
 }
 
 func (s *Storage) ReadChannels() (map[string]models.Channel, error) {

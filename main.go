@@ -178,13 +178,20 @@ func main() {
 		log.Fatal(err)
 	}
 
-	blocksOutput.Lines = blocks.PrintChannels(channels)
+	blocksOutput.Lines = blocks.PrintChannels(channels, true)
 	blocksOutput.Message = "updating..."
 	j, err := json.Marshal(&blocksOutput)
 	if err != nil {
 		log.Fatal(err)
 	}
 	fmt.Println(string(j))
+
+	if stor.UpdateAll(channels) {
+		blocksOutput.Message += "done"
+		blocksOutput.Lines = blocks.PrintChannels(channels, false)
+		jd, _ := json.Marshal(&blocksOutput)
+		fmt.Println(string(jd))
+	}
 
 	var runMPV bool
 	var plBuffer PlaylistBuffer
@@ -195,7 +202,7 @@ func main() {
 
 	for {
 		if err := inDecoder.Decode(&blocksInput); err != nil {
-			log.Fatal(err)
+			log.Fatalf("input decoding error: %s", err.Error())
 		}
 
 		switch blocksInput.Name {
@@ -274,7 +281,7 @@ func main() {
 					}
 				} else {
 					blocksOutput.Message = "channels list"
-					blocksOutput.Lines = blocks.PrintChannels(channels)
+					blocksOutput.Lines = blocks.PrintChannels(channels, false)
 				}
 			default:
 				switch len(blocksInput.Data) {
@@ -302,9 +309,10 @@ func main() {
 		}
 
 		blocksOutput.Input = ""
+		blocksOutput.ActEntr = 1
 		j, err := json.Marshal(&blocksOutput)
 		if err != nil {
-			log.Fatal(err)
+			log.Fatalf("input encoding error: %s", err.Error())
 		}
 		fmt.Println(string(j))
 

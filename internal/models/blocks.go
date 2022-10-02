@@ -4,16 +4,17 @@ type Blocks struct {
 	Message string `json:"message"`
 	// Overlay string `json:"overlay"`
 	// Prompt string `json:"prompt"`
-	Input string `json:"input"`
-	Lines []Line `json:"lines"`
-	// ActEntr int    `json:"active entry,omitempty"`
+	Input   string `json:"input"`
+	Lines   []Line `json:"lines"`
+	ActEntr int    `json:"active entry,omitempty"`
 }
 
 type Line struct {
 	Text string `json:"text"`
 	// Markup bool   `json:"markup"`
-	Icon string `json:"icon"`
-	Data string `json:"data"`
+	Icon          string `json:"icon"`
+	Data          string `json:"data"`
+	Nonselectable bool   `json:"nonselectable"`
 }
 
 type BlocksIn struct {
